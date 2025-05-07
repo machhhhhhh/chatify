@@ -7,7 +7,6 @@ import (
 type Application struct {
 	ApplicationID                      int        `json:"application_id,omitempty" gorm:"primaryKey; autoIncrement; column:application_id; comment:Primary Key"`
 	ApplicationName                    string     `json:"application_name,omitempty" gorm:"type:varchar(255); column:application_name;"`
-	ApplicationScheduleIsActive        bool       `json:"application_schedule_is_active" gorm:"type:boolean; column:application_schedule_is_active;"`
 	ApplicationScheduleUpdateStartTime *time.Time `json:"application_schedule_update_start_time,omitempty" gorm:"type:timestamp; not null; column:application_schedule_update_start_time;"`
 	ApplicationScheduleUpdateEndTime   *time.Time `json:"application_schedule_update_end_time,omitempty" gorm:"type:timestamp; not null; column:application_schedule_update_end_time;"`
 	CreatedAt                          *time.Time `json:"created_at,omitempty" gorm:"type:timestamp; not null; column:created_at;"`

@@ -18,7 +18,7 @@ func IsApplicationUpdatingService(application *global_types.IApplication) error 
 func FindApplicationModel() (global_types.IApplication, error) {
 	var application global_types.IApplication
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(DebugMode).
 		Scopes(SelectApplication).
 		Find(&application)
@@ -37,9 +37,9 @@ func FindApplicationModel() (global_types.IApplication, error) {
 func SelectApplication(db *gorm.DB) *gorm.DB {
 	return db.Select(`
 	*,
-	(CASE 
-		WHEN current_time BETWEEN application_schedule_update_start_time::time AND application_schedule_update_end_time::time
-		THEN false ELSE true
+	(CASE
+		WHEN application_schedule_is_active = TRUE AND current_time BETWEEN application_schedule_update_start_time::time AND application_schedule_update_end_time::time
+		THEN FALSE ELSE TRUE
 	END) AS "ApplicationIsAllowToPerformTaskWorkload"
 `)
 }

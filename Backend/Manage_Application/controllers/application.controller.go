@@ -64,7 +64,7 @@ func MigrateApplication(ctx *fiber.Ctx) error {
 
 	var app models.Application
 
-	query := transaction.Scopes(services.DebugMode).Find(&app)
+	var query *gorm.DB = transaction.Scopes(services.DebugMode).Find(&app)
 
 	if query.Error != nil {
 		transaction.Rollback()
@@ -100,6 +100,7 @@ func MigrateApplication(ctx *fiber.Ctx) error {
 
 		new_application := models.Application{
 			ApplicationName:                    "chatify Management System",
+			ApplicationScheduleIsActive:        true,
 			ApplicationScheduleUpdateStartTime: &start,
 			ApplicationScheduleUpdateEndTime:   &end,
 			CreatedBy:                          0,
@@ -126,7 +127,7 @@ func MigrateApplication(ctx *fiber.Ctx) error {
 func GetInformationApplication(ctx *fiber.Ctx) error {
 	var application global_types.IApplication
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Preload("Creator", services.SelectAccount).
 		Preload("Updater", services.SelectAccount).

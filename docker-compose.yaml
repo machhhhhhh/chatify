@@ -118,32 +118,32 @@ services:
         max-size: "50m"
         max-file: "10"
 
-  # chatify-manage-transaction:
-  #   image: chatify-manage-transaction:v1
-  #   build:
-  #     context: ./Backend/Manage_Transaction
-  #     dockerfile: Dockerfile
-  #   container_name: chatify-manage-transaction
-  #   networks:
-  #     - deployment-chatify-system
-  #   restart: always
-  #   environment:
-  #     - ENV_MODE=production
-  #     - SERVER_BASE_URL=https://localhost:7778
-  #     - PORT=3000
-  #     - DATABASE_HOST=postgres
-  #     - DATABASE_USER=admin
-  #     - DATABASE_PASSWORD=P@ssw0rd#555
-  #     - DATABASE_NAME=CHATIFY
-  #     - DATABASE_PORT=5432
-  #     - DATABASE_TIMEZONE=Asia/Bangkok
-  #     - AES_IV=4cneyoDet7Zrs3Wx
-  #     - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "50m"
-  #       max-file: "10"
+  chatify-manage-transaction:
+    image: chatify-manage-transaction:v1
+    build:
+      context: ./Backend/Manage_Transaction
+      dockerfile: Dockerfile
+    container_name: chatify-manage-transaction
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - ENV_MODE=production
+      - SERVER_BASE_URL=https://localhost:7778
+      - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=P@ssw0rd#555
+      - DATABASE_NAME=CHATIFY
+      - DATABASE_PORT=5432
+      - DATABASE_TIMEZONE=Asia/Bangkok
+      - AES_IV=4cneyoDet7Zrs3Wx
+      - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
 
   chatify-nginx:
     image: chatify-nginx:v1
@@ -162,7 +162,7 @@ services:
       - chatify-authentication
       - chatify-manage-account
       - chatify-manage-application
-      # - chatify-manage-transaction
+      - chatify-manage-transaction
     logging:
       driver: "json-file"
       options:
