@@ -1,0 +1,178 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: P@ssw0rd#555
+      POSTGRES_DB: CHATIFY
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - deployment-chatify-system
+
+  # chatify-socket-server:
+  #   image: chatify-socket-server:v1
+  #   build:
+  #     context: ./Backend/Socket_Server
+  #     dockerfile: Dockerfile
+  #   container_name: chatify-socket-server
+  #   networks:
+  #     - deployment-chatify-system
+  #   # restart: always
+  #   environment:
+  #     - SERVER_BASE_URL=https://localhost:8080
+  #     - NODE_ENV=production
+  #     - PORT=3000
+  #     - PATH_SOCKET_SERVER_CONNECTION=/chatify-system/
+  #     - PATH_SOCKET_CHANNEL_CONNECTION=/chatify-system/
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "50m"
+  #       max-file: "10"
+
+  chatify-authentication:
+    image: chatify-authentication:v1
+    build:
+      context: ./Backend/Authentication
+      dockerfile: Dockerfile
+    container_name: chatify-authentication
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - ENV_MODE=production
+      - SERVER_BASE_URL=https://localhost:7778
+      - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=P@ssw0rd#555
+      - DATABASE_NAME=CHATIFY
+      - DATABASE_PORT=5432
+      - DATABASE_TIMEZONE=Asia/Bangkok
+      - AES_IV=4cneyoDet7Zrs3Wx
+      - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+  chatify-manage-account:
+    image: chatify-manage-account:v1
+    build:
+      context: ./Backend/Manage_Account
+      dockerfile: Dockerfile
+    container_name: chatify-manage-account
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - ENV_MODE=production
+      - SERVER_BASE_URL=https://localhost:7778
+      - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=P@ssw0rd#555
+      - DATABASE_NAME=CHATIFY
+      - DATABASE_PORT=5432
+      - DATABASE_TIMEZONE=Asia/Bangkok
+      - AES_IV=4cneyoDet7Zrs3Wx
+      - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+  chatify-manage-application:
+    image: chatify-manage-application:v1
+    build:
+      context: ./Backend/Manage_Application
+      dockerfile: Dockerfile
+    container_name: chatify-manage-application
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - ENV_MODE=production
+      - SERVER_BASE_URL=https://localhost:7778
+      - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=P@ssw0rd#555
+      - DATABASE_NAME=CHATIFY
+      - DATABASE_PORT=5432
+      - DATABASE_TIMEZONE=Asia/Bangkok
+      - AES_IV=4cneyoDet7Zrs3Wx
+      - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+  # chatify-manage-transaction:
+  #   image: chatify-manage-transaction:v1
+  #   build:
+  #     context: ./Backend/Manage_Transaction
+  #     dockerfile: Dockerfile
+  #   container_name: chatify-manage-transaction
+  #   networks:
+  #     - deployment-chatify-system
+  #   restart: always
+  #   environment:
+  #     - ENV_MODE=production
+  #     - SERVER_BASE_URL=https://localhost:7778
+  #     - PORT=3000
+  #     - DATABASE_HOST=postgres
+  #     - DATABASE_USER=admin
+  #     - DATABASE_PASSWORD=P@ssw0rd#555
+  #     - DATABASE_NAME=CHATIFY
+  #     - DATABASE_PORT=5432
+  #     - DATABASE_TIMEZONE=Asia/Bangkok
+  #     - AES_IV=4cneyoDet7Zrs3Wx
+  #     - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+  #   logging:
+  #     driver: "json-file"
+  #     options:
+  #       max-size: "50m"
+  #       max-file: "10"
+
+  chatify-nginx:
+    image: chatify-nginx:v1
+    build:
+      context: ./NGINX
+      dockerfile: Dockerfile
+    container_name: chatify-nginx
+    networks:
+      - deployment-chatify-system
+    restart: always
+    ports:
+      - "7777:7777"
+      - "7778:7778"
+    depends_on:
+      # - chatify-socket-server
+      - chatify-authentication
+      - chatify-manage-account
+      - chatify-manage-application
+      # - chatify-manage-transaction
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+
+volumes:
+  postgres-data:
+    driver: local
+
+networks:
+  deployment-chatify-system:
+    driver: bridge
