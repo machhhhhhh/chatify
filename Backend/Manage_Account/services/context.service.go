@@ -60,3 +60,20 @@ func GetContextPayload[T any](ctx *fiber.Ctx) (T, error) {
 
 	return payload, nil
 }
+
+func GetContextFile[T any](ctx *fiber.Ctx) (T, error) {
+	var files T
+	request_file := ctx.Locals("files")
+
+	data, err := json.Marshal(request_file)
+	if err != nil {
+		return files, errors.New("Cannot Marshal Payload")
+	}
+
+	err = json.Unmarshal(data, &files)
+	if err != nil {
+		return files, errors.New("Invalid File")
+	}
+
+	return files, nil
+}

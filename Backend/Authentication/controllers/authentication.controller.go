@@ -42,7 +42,7 @@ func SystemLogin(ctx *fiber.Ctx) error {
 
 	var account models.Account
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_username = ?", strings.TrimSpace(body.Username)).
 		Omit("account_identify_number").

@@ -229,7 +229,7 @@ func GetInformationAccount(ctx *fiber.Ctx) error {
 
 	var account global_types.IAccount
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_id = ?", body.AccountID).
 		Preload("Logs_Authentication").
@@ -334,7 +334,7 @@ func CreateAccount(ctx *fiber.Ctx) error {
 
 	var duplicate_account models.Account
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_username = ? OR account_identify_number = ?", strings.TrimSpace(body.Username), strings.TrimSpace(body.IdentifyNumber)).
 		Select("account_id").

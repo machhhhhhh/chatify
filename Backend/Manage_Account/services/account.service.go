@@ -11,7 +11,7 @@ import (
 func FindAccountModel(account_id *int) (models.Account, error) {
 	var account models.Account
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(DebugMode).
 		Where("is_active = true").
 		Where("account_id = ?", account_id).
