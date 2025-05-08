@@ -16,26 +16,22 @@ services:
     networks:
       - deployment-chatify-system
 
-  # chatify-socket-server:
-  #   image: chatify-socket-server:v1
-  #   build:
-  #     context: ./Backend/Socket_Server
-  #     dockerfile: Dockerfile
-  #   container_name: chatify-socket-server
-  #   networks:
-  #     - deployment-chatify-system
-  #   # restart: always
-  #   environment:
-  #     - SERVER_BASE_URL=https://localhost:8080
-  #     - NODE_ENV=production
-  #     - PORT=3000
-  #     - PATH_SOCKET_SERVER_CONNECTION=/chatify-system/
-  #     - PATH_SOCKET_CHANNEL_CONNECTION=/chatify-system/
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "50m"
-  #       max-file: "10"
+  chatify-frontend:
+    image: chatify-frontend:v1
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    container_name: chatify-frontend
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - NEXT_PUBLIC_API_URL=https://localhost:8080
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
 
   chatify-authentication:
     image: chatify-authentication:v1
@@ -48,7 +44,7 @@ services:
     restart: always
     environment:
       - ENV_MODE=production
-      - SERVER_BASE_URL=https://localhost:7778
+      - SERVER_BASE_URL=https://localhost:8080
       - PORT=3000
       - DATABASE_HOST=postgres
       - DATABASE_USER=admin
@@ -75,7 +71,7 @@ services:
     restart: always
     environment:
       - ENV_MODE=production
-      - SERVER_BASE_URL=https://localhost:7778
+      - SERVER_BASE_URL=https://localhost:8080
       - PORT=3000
       - DATABASE_HOST=postgres
       - DATABASE_USER=admin
@@ -102,7 +98,7 @@ services:
     restart: always
     environment:
       - ENV_MODE=production
-      - SERVER_BASE_URL=https://localhost:7778
+      - SERVER_BASE_URL=https://localhost:8080
       - PORT=3000
       - DATABASE_HOST=postgres
       - DATABASE_USER=admin
@@ -118,32 +114,36 @@ services:
         max-size: "50m"
         max-file: "10"
 
-  # chatify-manage-transaction:
-  #   image: chatify-manage-transaction:v1
-  #   build:
-  #     context: ./Backend/Manage_Transaction
-  #     dockerfile: Dockerfile
-  #   container_name: chatify-manage-transaction
-  #   networks:
-  #     - deployment-chatify-system
-  #   restart: always
-  #   environment:
-  #     - ENV_MODE=production
-  #     - SERVER_BASE_URL=https://localhost:7778
-  #     - PORT=3000
-  #     - DATABASE_HOST=postgres
-  #     - DATABASE_USER=admin
-  #     - DATABASE_PASSWORD=P@ssw0rd#555
-  #     - DATABASE_NAME=CHATIFY
-  #     - DATABASE_PORT=5432
-  #     - DATABASE_TIMEZONE=Asia/Bangkok
-  #     - AES_IV=4cneyoDet7Zrs3Wx
-  #     - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
-  #   logging:
-  #     driver: "json-file"
-  #     options:
-  #       max-size: "50m"
-  #       max-file: "10"
+  chatify-manage-transaction:
+    image: chatify-manage-transaction:v1
+    build:
+      context: ./Backend/Manage_Transaction
+      dockerfile: Dockerfile
+    container_name: chatify-manage-transaction
+    networks:
+      - deployment-chatify-system
+    restart: always
+    environment:
+      - ENV_MODE=production
+      - SERVER_BASE_URL=https://localhost:8080
+      - PORT=3000
+      - DATABASE_HOST=postgres
+      - DATABASE_USER=admin
+      - DATABASE_PASSWORD=P@ssw0rd#555
+      - DATABASE_NAME=CHATIFY
+      - DATABASE_PORT=5432
+      - DATABASE_TIMEZONE=Asia/Bangkok
+      - AES_IV=4cneyoDet7Zrs3Wx
+      - AES_KEY=hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3
+      - ROOT_DIRECTORY=uploads
+      - PATH_RENDER_FILE=/manage-transaction/asset
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "10"
+    volumes:
+      - /Users/machhhhhhh/Documents/Freelance/chatify/temp:/app/uploads
 
   chatify-nginx:
     image: chatify-nginx:v1
@@ -155,14 +155,14 @@ services:
       - deployment-chatify-system
     restart: always
     ports:
-      - "7777:7777"
-      - "7778:7778"
+      - "80:80"
+      - "8080:8080"
     depends_on:
-      # - chatify-socket-server
+      - chatify-frontend
       - chatify-authentication
       - chatify-manage-account
       - chatify-manage-application
-      # - chatify-manage-transaction
+      - chatify-manage-transaction
     logging:
       driver: "json-file"
       options:

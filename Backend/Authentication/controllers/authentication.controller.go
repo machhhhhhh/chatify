@@ -42,7 +42,7 @@ func SystemLogin(ctx *fiber.Ctx) error {
 
 	var account models.Account
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_username = ?", strings.TrimSpace(body.Username)).
 		Omit("account_identify_number").
@@ -118,8 +118,20 @@ func SystemLogin(ctx *fiber.Ctx) error {
 
 	transaction.Commit()
 
+	type IResponseAuthentication struct {
+		AccessToken   string `json:"access_token"`
+		AccountID     int    `json:"account_id"`
+		AccountNumber string `json:"account_number"`
+		DisplayName   string `json:"display_name"`
+	}
+
 	return ctx.Status(fiber.StatusOK).JSON(global_types.IResponseAPI{
 		Message: "Login Successfully",
-		Data:    access_token,
+		Data: IResponseAuthentication{
+			AccountID:     account.AccountID,
+			AccessToken:   access_token,
+			AccountNumber: account.AccountNumber,
+			DisplayName:   account.FirstName + " " + account.LastName,
+		},
 	})
 }

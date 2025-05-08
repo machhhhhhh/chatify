@@ -211,8 +211,6 @@ func GetInformationAccount(ctx *fiber.Ctx) error {
 		})
 	}
 
-	body.AccountID = 1
-
 	if body.AccountID == 0 {
 		return ctx.Status(http.StatusBadRequest).JSON(global_types.IResponseAPI{
 			Message:      "Incorrect Parameter",
@@ -229,7 +227,7 @@ func GetInformationAccount(ctx *fiber.Ctx) error {
 
 	var account global_types.IAccount
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_id = ?", body.AccountID).
 		Preload("Logs_Authentication").
@@ -334,7 +332,7 @@ func CreateAccount(ctx *fiber.Ctx) error {
 
 	var duplicate_account models.Account
 
-	query := databases.DB.
+	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("account_username = ? OR account_identify_number = ?", strings.TrimSpace(body.Username), strings.TrimSpace(body.IdentifyNumber)).
 		Select("account_id").
@@ -404,6 +402,5 @@ func CreateAccount(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(global_types.IResponseAPI{
 		Message: "Create Account Successfully",
-		Data:    account.AccountID,
 	})
 }
