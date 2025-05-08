@@ -211,8 +211,6 @@ func GetInformationAccount(ctx *fiber.Ctx) error {
 		})
 	}
 
-	body.AccountID = 1
-
 	if body.AccountID == 0 {
 		return ctx.Status(http.StatusBadRequest).JSON(global_types.IResponseAPI{
 			Message:      "Incorrect Parameter",
@@ -404,6 +402,5 @@ func CreateAccount(ctx *fiber.Ctx) error {
 
 	return ctx.Status(fiber.StatusOK).JSON(global_types.IResponseAPI{
 		Message: "Create Account Successfully",
-		Data:    account.AccountID,
 	})
 }

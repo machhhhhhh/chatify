@@ -5,7 +5,9 @@ import (
 	"chatify/constants"
 	"chatify/databases"
 	"chatify/middlewares"
+	"chatify/models"
 	"chatify/routes"
+	"chatify/services"
 	global_types "chatify/types"
 	"context"
 	"log"
@@ -21,6 +23,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/timeout"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -31,7 +34,13 @@ func main() {
 		os.Exit(2)
 	}
 
+	var success bool = MigrateTransaction()
+	if success != true {
+		os.Exit(2)
+	}
+
 	var app *fiber.App = fiber.New(fiber.Config{
+		BodyLimit:         100 * 1024 * 1024,                    // 100 MB
 		Prefork:           false,                                // ❌ avoid unless doing CPU-bound ops & can handle the complexity
 		ProxyHeader:       fiber.HeaderXForwardedFor,            // ✅ required behind reverse proxies like NGINX
 		CaseSensitive:     true,                                 // ✅ enforce strict routing if app benefits from it
@@ -73,8 +82,7 @@ func main() {
 
 	app.Use(middlewares.RateLimiter(100, time.Minute)) // 1 minute per 100 requests for 1 IP
 
-	// file upload routes
-	app.Static("/assets", "./"+configs.ENV.FileSetting.RootDirectory)
+	app.Static(configs.ENV.FileSetting.PathRenderFile, "./"+configs.ENV.FileSetting.RootDirectory)
 
 	routes.SetupRouters(app)
 
@@ -93,4 +101,20 @@ func main() {
 		os.Exit(0)
 	}
 	log.Println("✅ Shutdown complete")
+}
+
+func MigrateTransaction() bool {
+	var transaction *gorm.DB = databases.DB.Begin()
+
+	if err := transaction.Scopes(services.DebugMode).AutoMigrate(
+		&models.Transaction{},
+		&models.TransactionFile{},
+	); err != nil {
+		transaction.Rollback()
+		return false
+	}
+
+	transaction.Commit()
+
+	return true
 }
