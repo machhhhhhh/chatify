@@ -32,6 +32,7 @@ func main() {
 	}
 
 	var app *fiber.App = fiber.New(fiber.Config{
+		BodyLimit:         5 * 1024 * 1024,                      // 5 MB
 		Prefork:           false,                                // ❌ avoid unless doing CPU-bound ops & can handle the complexity
 		ProxyHeader:       fiber.HeaderXForwardedFor,            // ✅ required behind reverse proxies like NGINX
 		CaseSensitive:     true,                                 // ✅ enforce strict routing if app benefits from it

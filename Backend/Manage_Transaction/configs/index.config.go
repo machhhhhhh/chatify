@@ -22,7 +22,8 @@ type IAESSetting struct {
 }
 
 type IFileSetting struct {
-	RootDirectory string
+	RootDirectory  string
+	PathRenderFile string
 }
 
 type IConfig struct {
@@ -48,7 +49,7 @@ func LoadConfig() IConfig {
 	return IConfig{
 		Name:             "Loan Management",
 		Version:          "1.0.0",
-		IsProductionMode: GetEnv("ENV_MODE", "development") == "production",
+		IsProductionMode: GetEnv("ENV_MODE", "production") == "production",
 		ServerSetting: IServerSetting{
 			Port:    GetEnv("PORT", "3000"),
 			BaseURL: GetEnv("SERVER_BASE_URL", "http://localhost:5555"),
@@ -66,7 +67,8 @@ func LoadConfig() IConfig {
 			AES_KEY: GetEnv("AES_KEY", "hiyt6nTEt6ASboHK0A4cneyoDet7Zrs3"),
 		},
 		FileSetting: IFileSetting{
-			RootDirectory: "uploads",
+			RootDirectory:  GetEnv("ROOT_DIRECTORY", "uploads"),
+			PathRenderFile: GetEnv("PATH_RENDER_FILE", "/manage-transaction/asset"),
 		},
 	}
 }

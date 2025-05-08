@@ -75,7 +75,12 @@ func MigrateTransaction(ctx *fiber.Ctx) error {
 }
 
 func GetListTransaction(ctx *fiber.Ctx) error {
-	body, err := services.GetContextPayload[global_types.ITransaction](ctx)
+	type IRequestBody struct {
+		TransactionID int  `json:"number"`
+		IsShowComment bool `json:"is_show_comment"`
+	}
+
+	body, err := services.GetContextPayload[IRequestBody](ctx)
 	if err != nil {
 		return ctx.Status(http.StatusBadRequest).JSON(global_types.IResponseAPI{
 			Message:      "Invalid Payload",
@@ -100,6 +105,20 @@ func GetListTransaction(ctx *fiber.Ctx) error {
 			}
 			return db
 		}).
+		Scopes(func(db *gorm.DB) *gorm.DB {
+			if body.IsShowComment != true {
+				return db.Where("CASE WHEN reference_transaction_id IS NOT NULL AND reference_transaction_id != 0 THEN FALSE ELSE TRUE END")
+			}
+			return db
+		}).
+		Preload("TransactionFile", func(db *gorm.DB) *gorm.DB {
+			return db.Select("*, CONCAT(?::text,'/',transaction_file_path) as transaction_file_path", configs.ENV.FileSetting.PathRenderFile)
+		}).
+		Preload("TransactionReference").
+		Preload("TransactionReference.Creator", services.SelectAccount).
+		Preload("TransactionReference.TransactionFile", func(db *gorm.DB) *gorm.DB {
+			return db.Select("*, CONCAT(?::text,'/',transaction_file_path) as transaction_file_path", configs.ENV.FileSetting.PathRenderFile)
+		}).
 		Preload("Creator", services.SelectAccount).
 		Preload("Updater", services.SelectAccount).
 		Order("transaction_id DESC").
@@ -118,7 +137,6 @@ func GetListTransaction(ctx *fiber.Ctx) error {
 }
 
 func GetInformationTransaction(ctx *fiber.Ctx) error {
-	var transaction []global_types.ITransaction
 
 	body, err := services.GetContextPayload[models.Transaction](ctx)
 	if err != nil {
@@ -135,12 +153,20 @@ func GetInformationTransaction(ctx *fiber.Ctx) error {
 		})
 	}
 
+	var transaction global_types.ITransaction
+
 	var query *gorm.DB = databases.DB.
 		Scopes(services.DebugMode).
 		Where("transaction_id = ?", body.TransactionID).
-		Preload("TransactionFile").
+		Preload("TransactionFile", func(db *gorm.DB) *gorm.DB {
+			return db.Select("*, CONCAT(?::text,'/',transaction_file_path) as transaction_file_path", configs.ENV.FileSetting.PathRenderFile)
+		}).
 		Preload("ReferenceTransaction").
 		Preload("TransactionReference").
+		Preload("TransactionReference.Creator", services.SelectAccount).
+		Preload("TransactionReference.TransactionFile", func(db *gorm.DB) *gorm.DB {
+			return db.Select("*, CONCAT(?::text,'/',transaction_file_path) as transaction_file_path", configs.ENV.FileSetting.PathRenderFile)
+		}).
 		Preload("Creator", services.SelectAccount).
 		Preload("Updater", services.SelectAccount).
 		Find(&transaction)
@@ -207,8 +233,7 @@ func CreateTransaction(ctx *fiber.Ctx) error {
 		})
 	}
 
-	if body.TransactionID < 0 ||
-		(len(request_file) == 0 && len(strings.TrimSpace(body.TransactionDescription)) == 0) {
+	if body.TransactionID < 0 || len(strings.TrimSpace(body.TransactionDescription)) == 0 {
 		return ctx.Status(http.StatusBadRequest).JSON(global_types.IResponseAPI{
 			Message:      "Incorrect Parameter",
 			ErrorSection: "CreateTransaction | validate payload",
@@ -311,14 +336,14 @@ func CreateTransaction(ctx *fiber.Ctx) error {
 				})
 			}
 		}
-	}
 
-	if err := transaction.Scopes(services.DebugMode).Create(&transaction_file).Error; err != nil {
-		transaction.Rollback()
-		return ctx.Status(http.StatusInternalServerError).JSON(global_types.IResponseAPI{
-			Message:      err.Error(),
-			ErrorSection: "CreateTransaction | create transaction file",
-		})
+		if err := transaction.Scopes(services.DebugMode).Create(&transaction_file).Error; err != nil {
+			transaction.Rollback()
+			return ctx.Status(http.StatusInternalServerError).JSON(global_types.IResponseAPI{
+				Message:      err.Error(),
+				ErrorSection: "CreateTransaction | create transaction file",
+			})
+		}
 	}
 
 	transaction.Commit()
@@ -327,7 +352,8 @@ func CreateTransaction(ctx *fiber.Ctx) error {
 	//! ********** EXTERNAL SERVICE ***************
 	//! *******************************************
 
-	// TODO: send socket-client to trigger the event socket-room
+	// TODO: send socket-client to socket-server
+	// TODO: for triggering the client-side terms of event socket-room
 
 	return ctx.Status(fiber.StatusOK).JSON(global_types.IResponseAPI{
 		Message: "Create Transaction Successfully",

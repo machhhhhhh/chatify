@@ -5,7 +5,9 @@ import (
 	"chatify/constants"
 	"chatify/databases"
 	"chatify/middlewares"
+	"chatify/models"
 	"chatify/routes"
+	"chatify/services"
 	global_types "chatify/types"
 	"context"
 	"log"
@@ -21,6 +23,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/timeout"
+	"gorm.io/gorm"
 )
 
 func main() {
@@ -31,7 +34,13 @@ func main() {
 		os.Exit(2)
 	}
 
+	var success bool = MigrateApplication()
+	if success != true {
+		os.Exit(2)
+	}
+
 	var app *fiber.App = fiber.New(fiber.Config{
+		BodyLimit:         5 * 1024 * 1024,                      // 5 MB
 		Prefork:           false,                                // ❌ avoid unless doing CPU-bound ops & can handle the complexity
 		ProxyHeader:       fiber.HeaderXForwardedFor,            // ✅ required behind reverse proxies like NGINX
 		CaseSensitive:     true,                                 // ✅ enforce strict routing if app benefits from it
@@ -90,4 +99,64 @@ func main() {
 		os.Exit(0)
 	}
 	log.Println("✅ Shutdown complete")
+}
+
+func MigrateApplication() bool {
+	var transaction *gorm.DB = databases.DB.Begin()
+
+	if err := transaction.Scopes(services.DebugMode).AutoMigrate(
+		&models.Application{},
+	); err != nil {
+		transaction.Rollback()
+		return false
+	}
+
+	transaction.Commit()
+	transaction = databases.DB.Begin()
+
+	var app models.Application
+
+	var query *gorm.DB = transaction.Scopes(services.DebugMode).Find(&app)
+
+	if query.Error != nil {
+		transaction.Rollback()
+		return false
+	}
+
+	if query.RowsAffected == 0 {
+		var timestamp time.Time = time.Now()
+		const start_time string = "01:00"
+		const end_time string = "02:00"
+		const layout string = "15:04"
+
+		start, err := time.Parse(layout, start_time)
+		if err != nil {
+			transaction.Rollback()
+			return false
+		}
+
+		end, err := time.Parse(layout, end_time)
+		if err != nil {
+			transaction.Rollback()
+			return false
+		}
+
+		new_application := models.Application{
+			ApplicationName:                    "chatify Management System",
+			ApplicationScheduleIsActive:        true,
+			ApplicationScheduleUpdateStartTime: &start,
+			ApplicationScheduleUpdateEndTime:   &end,
+			CreatedBy:                          0,
+			CreatedAt:                          &timestamp,
+		}
+
+		if err := transaction.Scopes(services.DebugMode).Create(&new_application).Error; err != nil {
+			transaction.Rollback()
+			return false
+		}
+	}
+
+	transaction.Commit()
+
+	return true
 }
