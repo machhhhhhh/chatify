@@ -1,4 +1,4 @@
-# chatify
+# 🚀 chatify
 
 An application which built with
 
@@ -13,11 +13,20 @@ An application which built with
 
 ---
 
-## 📥 Cloning
+# 🛠️ Prerequisites
+- Docker Desktop
+
+- Windows & macOS: download & install from
+https://www.docker.com/products/docker-desktop
+
+- Linux: install the Docker Engine & CLI for your distro—see
+https://docs.docker.com/engine/install/
+
+---
+
+# 📥 Cloning
 
 ```bash
-git clone https://github.com/machhhhhhh/chatify.git
-cd chatify
+chmod +x start.sh
 ./start.sh
-
 ```
