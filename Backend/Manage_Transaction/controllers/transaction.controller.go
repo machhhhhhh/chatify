@@ -306,6 +306,7 @@ func CreateTransaction(ctx *fiber.Ctx) error {
 
 	if len(request_file) != 0 {
 		if err := services.CreateDirectory(configs.ENV.FileSetting.RootDirectory); err != nil {
+			transaction.Rollback()
 			return ctx.Status(http.StatusBadRequest).JSON(global_types.IResponseAPI{
 				Message:      "Cannot create directory",
 				ErrorSection: "CreateTransaction | create directory",
